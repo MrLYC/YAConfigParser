@@ -3,3 +3,5 @@
 
 __author__ = 'MrLYC'
 __email__ = 'imyikong@gmail.com'
+
+from yacp import ConfigParser
