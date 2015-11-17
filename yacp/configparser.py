@@ -20,8 +20,8 @@ class ConfigParser(_ConfigParser):
             self.add_section(section)
         self.set(section, option, defaults)
 
-    def getlist(self, section, option):
-        return [i.strip() for i in self.get(section, option).split(",")]
+    def getlist(self, section, option, sep=","):
+        return [i.strip() for i in self.get(section, option).split(sep)]
 
     def getjson(self, section, option):
         return json.loads(self.get(section, option))
