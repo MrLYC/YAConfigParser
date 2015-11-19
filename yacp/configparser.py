@@ -8,18 +8,7 @@ from ConfigParser import ConfigParser as _ConfigParser
 from ConfigParser import NoSectionError, NoOptionError
 
 
-class ConfigParser(_ConfigParser):
-    def declare(self, section, option, defaults=NotImplemented):
-        if self.has_option(section, option):
-            return
-
-        if defaults is NotImplemented:
-            raise NoOptionError("%s::%s" % (section, option))
-
-        if not self.has_section(section):
-            self.add_section(section)
-        self.set(section, option, defaults)
-
+class DataStructureMixin(object):
     def getlist(self, section, option, sep=","):
         return [i.strip() for i in self.get(section, option).split(sep)]
 
@@ -31,3 +20,20 @@ class ConfigParser(_ConfigParser):
 
     def getregex(self, section, option, flags=0):
         return re.compile(self.get(section, option), flags)
+
+
+class DeclareOptionMixin(object):
+    def declare(self, section, option, defaults=NotImplemented):
+        if self.has_option(section, option):
+            return
+
+        if defaults is NotImplemented:
+            raise NoOptionError("%s::%s" % (section, option))
+
+        if not self.has_section(section):
+            self.add_section(section)
+        self.set(section, option, defaults)
+
+
+class ConfigParser(DataStructureMixin, DeclareOptionMixin, _ConfigParser):
+    pass
