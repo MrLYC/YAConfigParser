@@ -35,5 +35,5 @@ class DeclareOptionMixin(object):
         self.set(section, option, defaults)
 
 
-class ConfigParser(DataStructureMixin, DeclareOptionMixin, _ConfigParser):
+class ConfigParser(_ConfigParser, DataStructureMixin, DeclareOptionMixin):
     pass
