@@ -10,7 +10,17 @@ from yacp.configparser import (
 )
 
 
-class RedisHashDict(Mapping):
+class RedisDictMixin(object):
+    def update(self, dct):
+        for k, v in dct.items():
+            self[k] = v
+
+    def copy(self):
+        dict_type = getattr(self, "DictType", dict)
+        return dict_type(self)
+
+
+class RedisHashDict(Mapping, RedisDictMixin):
     def __init__(self, connection, name, *args, **kwargs):
         self.connection = connection
         self.name = name
@@ -38,15 +48,11 @@ class RedisHashDict(Mapping):
         if self.connection.hdel(self.name, key) == 0:
             raise KeyError("%s not found" % key)
 
-    def update(self, dct):
-        for k, v in dct.items():
-            self[k] = v
-
     def clear(self):
         self.connection.delete(self.name)
 
 
-class RedisPrefixDict(Mapping):
+class RedisPrefixDict(Mapping, RedisDictMixin):
     def __init__(self, connection, prefix, *args, **kwargs):
         self.connection = connection
         self.prefix = prefix
@@ -88,15 +94,10 @@ class RedisPrefixDict(Mapping):
     def real_key(self, key):
         return "%s%s" % (self.prefix, key)
 
-    @classmethod
-    def factory(cls, connection, prefix, *args, **kwargs):
-        return lambda: cls(connection, prefix, *args, **kwargs)
-
 
 class RedisConfigParser(_ConfigParser, DataStructureMixin, DeclareOptionMixin):
     ConfigPrefix = "__config__"
 
-    def __init__(self, connection, **kwargs):
-        kwargs["dict_type"] = RedisPrefixDict.factory(connection, self.ConfigPrefix)
-        super(RedisConfigParser, self).__init__(**kwargs)
-        self._defaults = {}
+    def __init__(self, connection, *args, **kwargs):
+        super(RedisConfigParser, self).__init__(*args, **kwargs)
+        self._sections = RedisPrefixDict(connection, self.ConfigPrefix)
