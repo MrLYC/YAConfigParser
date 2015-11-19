@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 from collections import Mapping
+from ConfigParser import ConfigParser as _ConfigParser
 
 from yacp.configparser import (
     NoSectionError, NoOptionError,
@@ -86,3 +87,16 @@ class RedisPrefixDict(Mapping):
 
     def real_key(self, key):
         return "%s%s" % (self.prefix, key)
+
+    @classmethod
+    def factory(cls, connection, prefix, *args, **kwargs):
+        return lambda: cls(connection, prefix, *args, **kwargs)
+
+
+class RedisConfigParser(_ConfigParser, DataStructureMixin, DeclareOptionMixin):
+    ConfigPrefix = "__config__"
+
+    def __init__(self, connection, **kwargs):
+        kwargs["dict_type"] = RedisPrefixDict.factory(connection, self.ConfigPrefix)
+        super(RedisConfigParser, self).__init__(**kwargs)
+        self._defaults = {}
