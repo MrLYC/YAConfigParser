@@ -9,6 +9,18 @@ from ConfigParser import NoSectionError, NoOptionError
 
 
 class DataStructureMixin(object):
+    _GetDictRex = re.compile(r"\s*(?P<key>\w+)\s*:\s*(?P<val>[^,$]+?)\s*")
+        
+    def getdict(self, section, option, factory=None):
+        result = {}
+        for i in self._GetDictRex.finditer(self.get(section, option)):
+            matched = i.groupdict()
+            result[matched["key"]] = (
+                factory(matched["val"])
+                if factory else matched["val"]
+            )
+        return result
+    
     def getlist(self, section, option, sep=","):
         return [i.strip() for i in self.get(section, option).split(sep)]
 
